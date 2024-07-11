@@ -38,4 +38,5 @@ if __name__ == '__main__':
         except Exception as e:
             print(f"Failed to execute script in {script_path}: {e}")
     else:
-        print("Invalid command-line arguments. Usage: python genutils.py <arg1> [--optional1 <value>] [--optional2 <value>]")
+        # Example: python genutils.py test.py
+        print("Invalid command-line arguments. Usage: python <script> <arg1> [--optional1 <value>] [--optional2 <value>]")
