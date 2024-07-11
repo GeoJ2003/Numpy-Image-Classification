@@ -55,17 +55,16 @@ def combine_images(vectorized_images):
     
     return combined_matrix
 
-def save_image(img_pil, extension):
-    path = 'imgs/saved_images'
+def save_image(img_pil, extension, filename, path='imgs/saved_images'):
     counter = 0
-    filename = f'saved_image({counter}).{extension}'
-    full_path = os.path.join(path, filename)
+    fullname = f'{filename}.{extension}'
+    full_path = os.path.join(path, fullname)
 
     while True:
         if os.path.exists(full_path):
             counter += 1
-            filename = f'saved_image({counter}).{extension}'
-            full_path = os.path.join(path, filename)
+            fullname = f'{filename}_({counter}).{extension}'
+            full_path = os.path.join(path, fullname)
         else:
             if not os.path.exists(path):
                 os.makedirs(path)
