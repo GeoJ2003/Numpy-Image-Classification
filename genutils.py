@@ -1,42 +1,45 @@
 import argparse
+import importlib
+import numpy as np
 
-def parse_command_line_params(required_params, optional_params):
-    parser = argparse.ArgumentParser()
-    for param in required_params:
-        parser.add_argument(param)
-    for param, default in optional_params.items():
-        parser.add_argument(param, nargs='?', default=default)
+def parse_command_line_params():
+    parser = argparse.ArgumentParser(description='Execute a function from a given script with optional arguments.')
+    # Required
+    parser.add_argument('script', help='The script containing the function to execute.')
+    parser.add_argument('function_name', help='The name of the function to execute.')
+    parser.add_argument('func_args', nargs='*', help='The arguments to pass to the function.')
+    # Optional
+    parser.add_argument('--pipe', help='Function to pipe the result to.', default=None)
     args = parser.parse_args()
-    
-    parsed_params = {}
-    for param in required_params:
-        parsed_params[param] = getattr(args, param)
-    for param, default in optional_params.items():
-        parsed_params[param] = getattr(args, param, default)
 
-    return parsed_params
+    return args.script, args.function_name, args.func_args, args.pipe
 
-def append_file_contents(source_file, target_file):
-    with open(source_file, 'r') as src:
-        contents = src.read()
-    with open(target_file, 'a') as tgt:
-        tgt.write(contents)
-
-# Example usage:
 if __name__ == '__main__':
-    required_params = ['arg1']
-    optional_params = {'--optional1': 'default_value1', '--optional2': 'default_value2'}
+    script, function_name, func_args, pipe_function_name = parse_command_line_params()
     
-    parsed_params = parse_command_line_params(required_params, optional_params)
-    if parsed_params:
-        script_path = parsed_params['arg1']
-        try:
-            with open(script_path, 'r') as file:
-                script_content = file.read()
-            exec(script_content)
-            print(f"Executed script in {script_path}")
-        except Exception as e:
-            print(f"Failed to execute script in {script_path}: {e}")
-    else:
-        # Example: python genutils.py test.py
-        print("Invalid command-line arguments. Usage: python <script> <arg1> [--optional1 <value>] [--optional2 <value>]")
+    try:
+        module_name = script.replace('.py', '')
+        module = importlib.import_module(module_name)
+        function_to_call = getattr(module, function_name)
+        
+        # Convert arguments to int if possible
+        converted_args = []
+        for arg in func_args:
+            try:
+                converted_args.append(int(arg))
+            except ValueError:
+                converted_args.append(arg)
+        
+        result = function_to_call(*converted_args)
+
+        np.set_printoptions(threshold=np.inf)
+        
+        if pipe_function_name:
+            # Assuming the pipe function is in the same module for simplicity
+            pipe_function = getattr(module, pipe_function_name)
+            piped_result = pipe_function(result)
+            print(f"Piped function {pipe_function_name} executed with result: {piped_result}")
+        else:
+            print(f"Function {function_name} executed with result: {result}")
+    except Exception as e:
+        print(f"Failed to execute function {function_name} in {script}: {e}")
