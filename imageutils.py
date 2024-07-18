@@ -4,7 +4,7 @@ from PIL import Image
 
 # Create a utility for loading an image file into a 2D array of gray pixel values in range [0, 255] , as a 2D NumPy array.  
 # Use PIL image library for Python for dissecting the image. Include params to resize the image as desired
-def load_image_and_resize(image_path, width, height):
+def load_image_and_resize(image_path, width=100, height=100):
 
     img = Image.open(image_path)
     img_resized = img.resize((width, height))
@@ -13,7 +13,8 @@ def load_image_and_resize(image_path, width, height):
     
     return img_array
 
-# Write a function for vectorizing the 2D array into a single column vector (column vector should be a 2D NumPy array, with a single column, to facilitate multiplication by a matrix)
+# Write a function for vectorizing the 2D array into a single column vector (column vector should be a 2D NumPy array, with a single column, 
+# to facilitate multiplication by a matrix)
 def vectorize_2D_array(array):
     column_vector = array.reshape(-1, 1)
     return column_vector
@@ -37,33 +38,24 @@ def load_images(dir_path):
     return images_dict
 
 # Write a function for combining the vectorized images into a matrix (2D NumPy array), where every vectorized image is a column
-def combine_images(vectorized_images):
-    if not vectorized_images:
+def combine_images(images_dict):
+    if not images_dict:
         return np.array([])
     
-    num_rows = max(len(img) for img in vectorized_images) # Find longest vector
-    num_cols = len(vectorized_images)  # Num of images
-
-    combined_matrix = np.zeros((num_rows, num_cols))
-    
-    # Fill the matrix with vectorized images
-    for col_index, img in enumerate(vectorized_images):
-        # Determine the length of the current image vector
-        length = len(img)
-        # Fill the corresponding column in the matrix
-        combined_matrix[:length, col_index] = img
+    combined_matrix = np.hstack(list(images_dict.values()))
     
     return combined_matrix
 
-def save_image(img_pil, extension, filename, path='imgs/saved_images'):
-    counter = 0
+def save_image(img_pil, extension='jpg', filename='saved_image', path='imgs/saved_images'):
+    img_pil = Image.fromarray(img_pil)
+    count = 0
     fullname = f'{filename}.{extension}'
     full_path = os.path.join(path, fullname)
 
     while True:
         if os.path.exists(full_path):
-            counter += 1
-            fullname = f'{filename}_({counter}).{extension}'
+            count += 1
+            fullname = f'{filename}_({count}).{extension}'
             full_path = os.path.join(path, fullname)
         else:
             if not os.path.exists(path):

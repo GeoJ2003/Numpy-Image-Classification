@@ -1,14 +1,27 @@
+import numpy as np
 import imageutils as img
 
-# Load and resize the image, then convert it back to a PIL image
+# Only works with greyscale images (2D arrays)
+def print_non_zero_values(array):
+    for row in array:
+            for value in row:
+                if value != 0:
+                    print(value, end=' ')
+                else:
+                    print('.', end=' ')
+            print()  # Newline after each row
+
+np.set_printoptions(threshold=np.inf)
+
 img_array = img.load_image_and_resize('imgs/dogs/Dog1.png', 100, 100)
-img_pil = img.Image.fromarray(img_array)
 
-# Save the image
-img.save_image(img_pil, 'png', 'Dog1_resized')
+print_non_zero_values(img_array)
 
-# Display the image
-img_pil.show()
+# img_array = img.load_image_and_resize('imgs/dogs/Dog1.png', 100, 100)
+
+# img.save_image(img_pil, 'png', 'Dog1_resized')
+
+# img_pil.show()
 
 # dir = 'imgs/dogs'
 
