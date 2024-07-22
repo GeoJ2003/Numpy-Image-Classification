@@ -1,5 +1,6 @@
 import numpy as np
 import imageutils as img
+import classification as cls
 
 # Only works with greyscale images (2D arrays)
 def print_non_zero_values(array):
@@ -11,11 +12,11 @@ def print_non_zero_values(array):
                     print('.', end=' ')
             print()  # Newline after each row
 
-np.set_printoptions(threshold=np.inf)
+# np.set_printoptions(threshold=np.inf)
 
-img_array = img.load_image_and_resize('imgs/dogs/Dog1.png', 100, 100)
+# img_array = img.load_image_and_resize('imgs/dogs/Dog1.png', 100, 100)
 
-print_non_zero_values(img_array)
+# print_non_zero_values(img_array)
 
 # img_array = img.load_image_and_resize('imgs/dogs/Dog1.png', 100, 100)
 
@@ -28,3 +29,9 @@ print_non_zero_values(img_array)
 # imgsDict = img.load_images(dir)
 
 # print(imgsDict)
+
+imgs_dict = img.load_images('imgs/mnist')
+
+cos_sim_table = cls.find_image_cosine_similarities(imgs_dict)
+
+cls.serve_similarity_table(imgs_dict, cos_sim_table)
