@@ -6,9 +6,8 @@ from PIL import Image
 # Use PIL image library for Python for dissecting the image. Include params to resize the image as desired
 def load_image_and_resize(image_path, width=100, height=100):
 
-    img = Image.open(image_path)
-    img_resized = img.resize((width, height))
-    img_gray = img_resized.convert('L')
+    img = Image.open(image_path).resize((width, height))
+    img_gray = img.convert('L')
     img_array = np.array(img_gray)
     
     return img_array
@@ -16,8 +15,7 @@ def load_image_and_resize(image_path, width=100, height=100):
 # Write a function for vectorizing the 2D array into a single column vector (column vector should be a 2D NumPy array, with a single column, 
 # to facilitate multiplication by a matrix)
 def vectorize_2D_array(array):
-    column_vector = array.reshape(-1, 1)
-    return column_vector
+    return array.reshape(-1, 1)
 
 # Write a function for loading a directory full of JPEG image files into a dict mapping : filename -> vectorized image
 def load_images(dir_path):
@@ -27,9 +25,10 @@ def load_images(dir_path):
         img_path = os.path.join(dir_path, file)
 
         try:
-            img = Image.open(img_path)
-            img_array = np.array(img)
-            vectorized_img = vectorize_2D_array(img_array)
+            # Using default width and height from load_image_and_resize
+            img = load_image_and_resize(img_path)
+            img_array = np.array(img) / 255.0
+            vectorized_img = vectorize_2D_array(np.round(img_array, 2))
             images_dict[file] = vectorized_img
 
         except IOError:
@@ -42,24 +41,6 @@ def combine_images(images_dict):
     if not images_dict:
         return np.array([])
     
-    combined_matrix = np.hstack(list(images_dict.values()))
+    combined_matrix = np.column_stack(list(images_dict.values()))
     
     return combined_matrix
-
-def save_image(img_pil, extension='jpg', filename='saved_image', path='imgs/saved_images'):
-    img_pil = Image.fromarray(img_pil)
-    count = 0
-    fullname = f'{filename}.{extension}'
-    full_path = os.path.join(path, fullname)
-
-    while True:
-        if os.path.exists(full_path):
-            count += 1
-            fullname = f'{filename}_({count}).{extension}'
-            full_path = os.path.join(path, fullname)
-        else:
-            if not os.path.exists(path):
-                os.makedirs(path)
-            img_pil.save(full_path)
-            print(f"File {filename} saved in {path}.")
-            break
