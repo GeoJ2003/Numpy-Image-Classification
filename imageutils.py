@@ -18,17 +18,14 @@ def vectorize_2D_array(array):
     return array.reshape(-1, 1)
 
 # Write a function for loading a directory full of JPEG image files into a dict mapping : filename -> vectorized image
-def load_images(dir_path):
+def load_images(dir_path, width=100, height=100):
     images_dict = {}
 
     for file in os.listdir(dir_path):
         img_path = os.path.join(dir_path, file)
 
         try:
-            # Using default width and height from load_image_and_resize
-            img = load_image_and_resize(img_path)
-            img_array = np.array(img) / 255.0
-            vectorized_img = vectorize_2D_array(np.round(img_array, 2))
+            vectorized_img = load_and_vectorize(img_path, width, height)
             images_dict[file] = vectorized_img
 
         except IOError:
@@ -44,3 +41,10 @@ def combine_images(images_dict):
     combined_matrix = np.column_stack(list(images_dict.values()))
     
     return combined_matrix
+
+def load_and_vectorize(img_path, width=100, height=100):
+    img = load_image_and_resize(img_path, width, height)
+    img_array = np.array(img) / 255.0
+    vectorized_img = vectorize_2D_array(np.round(img_array, 2))
+
+    return vectorized_img
