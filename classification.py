@@ -2,11 +2,9 @@ from flask import Flask, render_template_string
 import numpy as np
 import imageutils as img
 
+# Finds the cosine similarity between each pair of vectors in the matrix
+# Each column in the matrix represents a vector (image)
 def cosine_similarity(matrix):
-    """
-    Calculate the cosine similarity between each pair of vectors in the matrix.
-    Each column in the matrix represents a vector (image).
-    """
     # Normalize the columns (vectors)
     d = np.linalg.norm(matrix, axis=0)
     matrix_normalized = matrix / d
@@ -19,10 +17,8 @@ def cosine_similarity(matrix):
     
     return similarity
 
+# Finds the cosine similarities between all vectorized images in the images_dict
 def find_image_cosine_similarities(images_dict):
-    """
-    Find the cosine similarities between all vectorized images in the images_dict.
-    """
     # Combine images into a matrix where each column is a vectorized image
     combined_matrix = img.combine_images(images_dict)
     
@@ -31,6 +27,7 @@ def find_image_cosine_similarities(images_dict):
     
     return similarities
 
+# Serves an HTML table showing the cosine similarity comparisons on a local web server
 def serve_similarity_table(images_dict, similarities):
     """
     Serve an HTML table showing the cosine similarity comparisons on a local web server.
