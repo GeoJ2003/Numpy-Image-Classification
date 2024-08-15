@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/styles.css">
+</head>
+<body>
+    <h2>Available Directories in MNIST</h2>
+    <ul id="directory-list">
+        <li>
+            <input type="checkbox" id="zero" name="zero">
+            <a href="imgs/mnist/zero">Zero</a>
+        </li>
+        <li>
+            <input type="checkbox" id="one" name="one">
+            <a href="imgs/mnist/one">One</a>
+        </li>
+        <li>
+            <input type="checkbox" id="two" name="two">
+            <a href="imgs/mnist/two">Two</a>
+        </li>
+        <li>
+            <input type="checkbox" id="three" name="three">
+            <a href="imgs/mnist/three">Three</a>
+        </li>
+        <li>
+            <input type="checkbox" id="four" name="four">
+            <a href="imgs/mnist/four">Four</a>
+        </li>
+        <li>
+            <input type="checkbox" id="five" name="five">
+            <a href="imgs/mnist/five">Five</a>
+        </li>
+        <li>
+            <input type="checkbox" id="six" name="six">
+            <a href="imgs/mnist/six">Six</a>
+        </li>
+        <li>
+            <input type="checkbox" id="seven" name="seven">
+            <a href="imgs/mnist/seven">Seven</a>
+        </li>
+        <li>
+            <input type="checkbox" id="eight" name="eight">
+            <a href="imgs/mnist/eight">Eight</a>
+        </li>
+        <li>
+            <input type="checkbox" id="nine" name="nine">
+            <a href="imgs/mnist/nine">Nine</a>
+        </li>
+    </ul>
+    <h2>Excluded Directories</h2>
+    <ul id="unchecked-list"></ul>
+    <input type="text" id="num-images-input" placeholder="Enter number of images">
+    <button id="num-images-btn"># of images from each directory</button>
+    <input type="text" id="num-images-class-input" placeholder="Enter number of images">
+    <button id="num-images-class-btn" disabled># of images to classify</button>
+    <button id="set-variable-btn" disabled>Train</button>
+    <button id="classify-dirs-btn" disabled>Classify Images</button>
+    <div id="results"></div>
+    <div id="image-display"></div>
+
+    <script src="/static/js/scripts.js"></script>
+</body>
+</html>
