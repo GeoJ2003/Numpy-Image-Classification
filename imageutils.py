@@ -18,20 +18,24 @@ def vectorize_2D_array(array):
     return array.reshape(-1, 1)
 
 # Write a function for loading a directory full of JPEG image files into a dict mapping : filename -> vectorized image
-def load_images(dir_path, width=100, height=100):
+def load_images(dir_path, width=100, height=100, num_images=0):
     images_dict = {}
+    count = 0
 
     for file in os.listdir(dir_path):
+        if num_images and count >= num_images:
+            break
         img_path = os.path.join(dir_path, file)
 
         try:
             vectorized_img = load_and_vectorize(img_path, width, height)
             images_dict[file] = vectorized_img
+            count += 1
 
         except IOError:
             print(f"{file} is not a valid image.")
 
-    return images_dict
+    return images_dict, count
 
 # Write a function for combining the vectorized images into a matrix (2D NumPy array), where every vectorized image is a column
 def combine_images(images_dict):
