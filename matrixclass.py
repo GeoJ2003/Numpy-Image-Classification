@@ -8,9 +8,9 @@ class MC_list:
     confidence_list = np.array([])
     img_classification = {}
 
-    def __init__(self, dir_path, num_images=0, excluded_dirs_list=[]):
+    def __init__(self, dir_path, num_images=0, excluded_dirs_list=[], threshold=0.01, width=100, height=100):
         self.excluded_dirs_list = excluded_dirs_list
-        self.matrix_classes = self.mc_list(dir_path, num_images)
+        self.matrix_classes = self.mc_list(dir_path, num_images, threshold, width, height)
         for matrix_class in self.matrix_classes:
             print(f"Matrix class {matrix_class.name} created with {matrix_class.img_count} images.")
 
@@ -77,11 +77,11 @@ class MC_list:
         print(f"{incorrect}/{total} ({perIncorrect}%) images were incorrectly classified.")
         return perCorrect, perIncorrect, confidence
     
-    def mc_list(self, dir_path, num_images=0):
+    def mc_list(self, dir_path, num_images=0, threshold=0.01, width=100, height=100):
         self.matrix_classes = []
         for dir in os.listdir(dir_path):
             if os.path.basename(dir) not in self.excluded_dirs_list:
-                self.matrix_classes.append(MatrixClass(os.path.join(dir_path, dir), num_images))
+                self.matrix_classes.append(MatrixClass(os.path.join(dir_path, dir), num_images, threshold, width, height))
         return self.matrix_classes
 
 class MatrixClass:
@@ -113,23 +113,22 @@ class MatrixClass:
         pseudoInverse = np.dot(np.linalg.inv(temp_matrix), self.U.T)
         # Using np.lingalg.pinv(self.U) would be the same as the above two lines
         self.embedding_matrix = np.dot(self.U, pseudoInverse)  # A * [[A^T * A]^-1 * A^T]
+
+        # Normalize embedding matrix
+        norms = np.linalg.norm(self.embedding_matrix, axis=0)
+        norms[norms == 0] = 1  # Avoid division by zero
+        self.embedding_matrix = self.embedding_matrix / norms
     
     def proj_img_onto_subspace(self, img_path):
         if not os.path.exists(img_path):
             print(f"File {img_path} does not exist.")
             return
 
-        vectorized_img = img.load_and_vectorize(img_path, self.width, self.height)
+        vectorized_img_normalized = img.load_and_vectorize(img_path, self.width, self.height)
 
-        norms = np.linalg.norm(self.embedding_matrix, axis=0)
-        norms[norms == 0] = 1  # Avoid division by zero
-        embedding_normalized = self.embedding_matrix / norms
-
-        vectorized_img_normalized = vectorized_img / np.linalg.norm(vectorized_img)
-
-        cosine_similarities = np.dot(embedding_normalized.T, vectorized_img_normalized)
+        # Compute the cosine similarities
+        cosine_similarities = np.dot(self.embedding_matrix.T, vectorized_img_normalized)
 
         max_cosine_similarity = np.max(cosine_similarities).round(3)
 
-        # print(f"Max cosine similarity for the \"{self.name}\" subspace: {max_cosine_similarity}")
         return max_cosine_similarity
