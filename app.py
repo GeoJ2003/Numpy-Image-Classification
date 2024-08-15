@@ -9,25 +9,28 @@ matrix_classes = None
 def index():
     return render_template('index.html')
 
-@app.route('/set_variable', methods=['POST'])
-def set_variable():
+@app.route('/train', methods=['POST'])
+def train():
     global matrix_classes
     data = request.json
     folders = data['folders']
     num_images = data['num_images']
-    matrix_classes = mc.MC_list('imgs/mnist', num_images, folders)
+    threshold = data['threshold']
+    width = data['width']
+    height = data['height']
+    matrix_classes = mc.MC_list('imgs/mnist', num_images, folders, threshold, width, height)
     
     # Gather image paths
     image_paths = []
     for matrix_class in matrix_classes.matrix_classes:
         for img_name in matrix_class.imgs_dict:
-            # img_path = os.path.join('imgs/mnist', matrix_class.name, img_name)
-            image_paths.append('imgs/mnist/' + matrix_class.name + '/' + img_name)
+            img_path = 'imgs/mnist/' + matrix_class.name + '/' + img_name
+            image_paths.append((img_path, matrix_class.name))
 
     return jsonify(success=True, image_paths=image_paths)
 
-@app.route('/classify_dirs', methods=['POST'])
-def classify_dirs():
+@app.route('/classify_imgs', methods=['POST'])
+def classify_imgs():
     global matrix_classes
     data = request.json
     num_images = data['num_images']
