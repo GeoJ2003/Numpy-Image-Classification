@@ -50,12 +50,14 @@ class MC_list:
                 count += 1
     
     def classify_dirs(self, dir_path, num_images=0):
+        self.confidence_list = np.array([])
+        self.img_classification = {}
+        correct = 0
+        incorrect = 0
+
         for dir in os.listdir(dir_path):
             if os.path.basename(dir) not in self.excluded_dirs_list:
                 self.classify_dir(os.path.join(dir_path, dir), num_images)
-        
-        correct = 0
-        incorrect = 0
 
         # Check if each image was classified correctly
         for img_name, classification in self.img_classification.items():
@@ -109,6 +111,7 @@ class MatrixClass:
         self.U = U[:, index]
         temp_matrix = np.dot(self.U.T, self.U)
         pseudoInverse = np.dot(np.linalg.inv(temp_matrix), self.U.T)
+        # Using np.lingalg.pinv(self.U) would be the same as the above two lines
         self.embedding_matrix = np.dot(self.U, pseudoInverse)  # A * [[A^T * A]^-1 * A^T]
     
     def proj_img_onto_subspace(self, img_path):
