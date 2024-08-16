@@ -15,19 +15,19 @@ class MC_list:
             print(f"Matrix class {matrix_class.name} created with {matrix_class.img_count} images.")
 
     def classify_img(self, img_path):
-        sim_dict = {}
-        similarities = np.array([])
+        proj_dict = {}
+        projections = np.array([])
         img_name = os.path.basename(img_path)
 
         for matrix_class in self.matrix_classes:
-            similarity = matrix_class.proj_img_onto_subspace(img_path)
-            sim_dict[matrix_class.name] = similarity
-            similarities = np.append(similarities, similarity)
+            projection = matrix_class.proj_img_onto_subspace(img_path)
+            proj_dict[matrix_class.name] = projection
+            projections = np.append(projections, projection)
 
-        classification = max(sim_dict, key=sim_dict.get)
-        confidence = np.mean(similarities).round(1)
+        classification = max(proj_dict, key=proj_dict.get)
+        confidence = np.mean(projections / np.max(projections)).round(1) * 100
 
-        # print(f"Image {img_path} classified as {classification} with {np.max(similarities).round(1)}% accuracy and {confidence}% confidence.")
+        # print(f"Image {img_path} classified as {classification} with {np.max(projections).round(1)}% accuracy and {confidence}% confidence.")
         self.img_classification[img_name] = classification
         self.confidence_list = np.append(self.confidence_list, confidence)
 
@@ -120,7 +120,7 @@ class MatrixClass:
 
         vectorized_img = img.load_and_vectorize(img_path, self.width, self.height)
 
-        # Compute the cosine similarities
+        # Project the image onto the subspace
         projection = np.dot(self.embedding_matrix, vectorized_img)
 
         max_projection = np.max(np.linalg.norm(projection)).round(3)
