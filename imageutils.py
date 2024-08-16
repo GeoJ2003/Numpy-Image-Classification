@@ -50,11 +50,5 @@ def load_and_vectorize(img_path, width=100, height=100):
     img = load_image_and_resize(img_path, width, height)
     img_array = np.array(img) / 255.0
     vectorized_img = vectorize_2D_array(img_array)
-    
-    # Normalize the vectorized image to have unit norm
-    norm = np.linalg.norm(vectorized_img)
-    if norm == 0:
-        norm = 1  # Avoid division by zero
-    vectorized_img_normalized = vectorized_img / norm
 
-    return vectorized_img_normalized
+    return vectorized_img
