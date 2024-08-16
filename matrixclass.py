@@ -25,7 +25,6 @@ class MC_list:
             similarities = np.append(similarities, similarity)
 
         classification = max(sim_dict, key=sim_dict.get)
-        similarities = similarities * 100
         confidence = np.mean(similarities).round(1)
 
         # print(f"Image {img_path} classified as {classification} with {np.max(similarities).round(1)}% accuracy and {confidence}% confidence.")
@@ -106,29 +105,24 @@ class MatrixClass:
         U, S, VT = np.linalg.svd(self.combined_images, full_matrices=False)
         minimum = threshold * np.max(S)
         # Find significant eigenvectors
-        index = np.where(S >= minimum)[0]
+        index = np.sum(S > minimum)
         # This will be our "A" matrix to find the embedding matrix
-        self.U = U[:, index]
+        self.U = U[:, :index]
         temp_matrix = np.dot(self.U.T, self.U)
         pseudoInverse = np.dot(np.linalg.inv(temp_matrix), self.U.T)
         # Using np.lingalg.pinv(self.U) would be the same as the above two lines
         self.embedding_matrix = np.dot(self.U, pseudoInverse)  # A * [[A^T * A]^-1 * A^T]
-
-        # Normalize embedding matrix
-        norms = np.linalg.norm(self.embedding_matrix, axis=0)
-        norms[norms == 0] = 1  # Avoid division by zero
-        self.embedding_matrix = self.embedding_matrix / norms
     
     def proj_img_onto_subspace(self, img_path):
         if not os.path.exists(img_path):
             print(f"File {img_path} does not exist.")
             return
 
-        vectorized_img_normalized = img.load_and_vectorize(img_path, self.width, self.height)
+        vectorized_img = img.load_and_vectorize(img_path, self.width, self.height)
 
         # Compute the cosine similarities
-        cosine_similarities = np.dot(self.embedding_matrix.T, vectorized_img_normalized)
+        projection = np.dot(self.embedding_matrix, vectorized_img)
 
-        max_cosine_similarity = np.max(cosine_similarities).round(3)
+        max_projection = np.max(np.linalg.norm(projection)).round(3)
 
-        return max_cosine_similarity
+        return max_projection
