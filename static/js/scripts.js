@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     const checkboxes = document.querySelectorAll('#directory-list input[type="checkbox"]');
-    const uncheckedList = document.getElementById('unchecked-list');
     const numImagesInput = document.getElementById('num-images-input');
     const thresholdInput = document.getElementById('threshold-input');
     const widthInput = document.getElementById('width-input');
@@ -18,23 +17,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let threshold = 0.01;
     let width = 100;
     let height = 100;
-
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
-            updateUncheckedList();
-        });
-    });
-
-    function updateUncheckedList() {
-        uncheckedList.innerHTML = '';
-        checkboxes.forEach(checkbox => {
-            if (!checkbox.checked) {
-                const li = document.createElement('li');
-                li.textContent = checkbox.name;
-                uncheckedList.appendChild(li);
-            }
-        });
-    }
 
     numImagesBtn.addEventListener('click', () => {
         imageDisplayDiv.innerHTML = '';
