@@ -12,12 +12,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const resultsDiv = document.getElementById('results');
     const imageDisplayDiv = document.getElementById('image-display');
 
-    let numImages = 0;
-    let numImagesClass = 0;
-    let threshold = 0.01;
-    let width = 100;
-    let height = 100;
-
     numImagesBtn.addEventListener('click', () => {
         imageDisplayDiv.innerHTML = '';
         resultsDiv.innerHTML = '';
@@ -117,8 +111,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 let correct = data.predictions[0];
                 let incorrect = data.predictions[1];
                 let total = correct + incorrect;
-                let perCorrect = (data.predictions[0] / total) * 100;
-                let perIncorrect = (data.predictions[1] / total) * 100;
+                // Round to the tenths place
+                let perCorrect = Math.round((data.predictions[0] / total) * 1000) / 10;
+                let perIncorrect = Math.round((data.predictions[1] / total) * 1000) / 10;
                 resultsDiv.innerHTML = `
                     <p>${perCorrect}% (${correct}/${total}) of images were correctly classified with ${data.confidence}% confidence.</p>
                     <p>${perIncorrect}% (${incorrect}/${total}) of images were incorrectly classified.</p>
