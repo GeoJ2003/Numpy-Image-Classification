@@ -34,12 +34,21 @@ def classify_imgs():
     global matrix_classes
     data = request.json
     num_images = data['num_images']
+    img_paths = []
     if not matrix_classes:
         return jsonify(success=False, message="Matrix classes not set"), 400
 
     try:
-        perCorrect, perIncorrect, confidence = matrix_classes.classify_dirs('imgs/mnist', num_images)
-        return jsonify(success=True, perCorrect=perCorrect, perIncorrect=perIncorrect, confidence=confidence)
+        predictions, confidence = matrix_classes.classify_dirs('imgs/mnist', num_images)
+        wrong_classification = matrix_classes.wrong_classification
+        for img_name in wrong_classification:
+            img_path = 'imgs/mnist/' + wrong_classification[img_name][1] + '/' + img_name
+            img_paths.append((img_path, wrong_classification[img_name][0]))
+        return jsonify(success=True, 
+                       predictions=predictions,  
+                       confidence=confidence,
+                       wrong_classification=wrong_classification,
+                       img_paths=img_paths)
     except Exception as e:
         return jsonify(success=False, message=str(e)), 500
 

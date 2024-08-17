@@ -15,9 +15,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     let numImages = 0;
     let numImagesClass = 0;
-    thresholdInput.value = 0.01;
-    widthInput.value = 100;
-    heightInput.value = 100;
+    let threshold = 0.01;
+    let width = 100;
+    let height = 100;
 
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', () => {
@@ -37,8 +37,19 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     numImagesBtn.addEventListener('click', () => {
-        numImages = parseInt(numImagesInput.value);
-        if (!isNaN(numImages) && numImages > 0) {
+        imageDisplayDiv.innerHTML = '';
+        resultsDiv.innerHTML = '';
+
+        if (isNaN(parseInt(numImagesInput.value)) ||
+            isNaN(parseInt(thresholdInput.value)) || 
+            isNaN(parseInt(widthInput.value)) || 
+            isNaN(parseInt(heightInput.value))) {
+            resultsDiv.innerHTML = `Please enter valid values for the number of images, threshold, width, and height.`;
+        } else {
+            numImages = parseInt(numImagesInput.value);
+            threshold = parseFloat(thresholdInput.value);
+            width = parseInt(widthInput.value);
+            height = parseInt(heightInput.value);
             thresholdInput.disabled = true;
             widthInput.disabled = true;
             heightInput.disabled = true;
@@ -46,8 +57,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             numImagesClassInput.disabled = false;
             numImagesBtn.disabled = true;
             numImagesInput.disabled = true;
-        } else {
-            alert("Please enter a valid number of images.");
+            resultsDiv.innerHTML = '';
         }
     });
 
@@ -57,13 +67,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
             TrainBtn.disabled = false;
             numImagesClassBtn.disabled = true;
             numImagesClassInput.disabled = true;
+            resultsDiv.innerHTML = '';
         } else {
-            alert("Please enter a valid number of images.");
+            resultsDiv.innerHTML = `Please enter a valid value for the number of images to classify.`;
         }
     });
 
     TrainBtn.addEventListener('click', () => {
         const uncheckedFolders = [];
+        TrainBtn.disabled = true;
         checkboxes.forEach(checkbox => {
             if (!checkbox.checked) {
                 uncheckedFolders.push(checkbox.name);
@@ -78,7 +90,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             },
             body: JSON.stringify({ 
                 folders: uncheckedFolders, 
-                num_images: numImages, 
+                num_images: parseInt(numImagesInput.value), 
                 threshold: parseFloat(thresholdInput.value), 
                 width: parseInt(widthInput.value), 
                 height: parseInt(heightInput.value) 
@@ -87,37 +99,52 @@ document.addEventListener('DOMContentLoaded', (event) => {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                console.log("Variable set successfully:", data);
+                console.log("Matrix classes created successfully:", data);
                 classifyImgsBtn.disabled = false;
-                TrainBtn.disabled = true;
                 displayImages(data.image_paths);
                 resultsDiv.innerHTML = `Images used for training:`;
             } else {
-                console.error("Failed to set variable");
+                console.error("Failed to create matrix classes");
             }
         })
         .catch(error => {
-            console.error("Error setting variable:", error);
+            console.error("Error creating matrix classes:", error);
         });
     });
 
     classifyImgsBtn.addEventListener('click', () => {
         resultsDiv.innerHTML = `Classifying images...`;
+        classifyImgsBtn.disabled = true;
         fetch('/classify_imgs', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ num_images: numImagesClass })
+            body: JSON.stringify({ num_images: parseInt(numImagesClassInput.value) })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 console.log("Classification successful:", data);
+                thresholdInput.disabled = false;
+                widthInput.disabled = false;
+                heightInput.disabled = false;
+                numImagesBtn.disabled = false;
+                numImagesInput.disabled = false;
+                imageDisplayDiv.innerHTML = '';
+                let correct = data.predictions[0];
+                let incorrect = data.predictions[1];
+                let total = correct + incorrect;
+                let perCorrect = (data.predictions[0] / total) * 100;
+                let perIncorrect = (data.predictions[1] / total) * 100;
                 resultsDiv.innerHTML = `
-                    <p>${data.perCorrect}% of images were correctly classified with ${data.confidence}% confidence.</p>
-                    <p>${data.perIncorrect}% of images were incorrectly classified.</p>
+                    <p>${perCorrect}% (${correct}/${total}) of images were correctly classified with ${data.confidence}% confidence.</p>
+                    <p>${perIncorrect}% (${incorrect}/${total}) of images were incorrectly classified.</p>
                 `;
+                if (data.img_paths.length > 0) {
+                    resultsDiv.innerHTML += `<p>Images classified incorrectly:</p>`;
+                    displayImages(data.img_paths);
+                }
             } else {
                 console.error("Classification failed:", data.message);
             }
@@ -125,12 +152,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         .catch(error => {
             console.error("Error classifying directories:", error);
         });
-        thresholdInput.disabled = false;
-        widthInput.disabled = false;
-        heightInput.disabled = false;
-        numImagesBtn.disabled = false;
-        numImagesInput.disabled = false;
-        classifyImgsBtn.disabled = true;
     });
 
     function displayImages(imagePaths) {

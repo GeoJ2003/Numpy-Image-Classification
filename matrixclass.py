@@ -7,6 +7,7 @@ class MC_list:
     excluded_dirs_list = []
     confidence_list = np.array([])
     img_classification = {}
+    wrong_classification = {}
 
     def __init__(self, dir_path, num_images=0, excluded_dirs_list=[], threshold=0.01, width=100, height=100):
         self.excluded_dirs_list = excluded_dirs_list
@@ -28,7 +29,7 @@ class MC_list:
         confidence = np.mean(projections / np.max(projections)).round(1) * 100
 
         # print(f"Image {img_path} classified as {classification} with {np.max(projections).round(1)}% accuracy and {confidence}% confidence.")
-        self.img_classification[img_name] = classification
+        self.img_classification[img_name] = [classification, os.path.basename(os.path.dirname(img_path))] # [classified, actual]
         self.confidence_list = np.append(self.confidence_list, confidence)
 
     def classify_dir(self, dir_path, num_images=0):
@@ -51,6 +52,7 @@ class MC_list:
     def classify_dirs(self, dir_path, num_images=0):
         self.confidence_list = np.array([])
         self.img_classification = {}
+        self.wrong_classification = {}
         correct = 0
         incorrect = 0
 
@@ -60,11 +62,10 @@ class MC_list:
 
         # Check if each image was classified correctly
         for img_name, classification in self.img_classification.items():
-            classified_dir = os.path.join(dir_path, classification)
-            img_path = os.path.join(classified_dir, img_name)
-            if os.path.exists(img_path):
+            if classification[0] == classification[1]:
                 correct += 1
             else:
+                self.wrong_classification[img_name] = classification
                 incorrect += 1
 
         total = correct + incorrect
@@ -74,7 +75,8 @@ class MC_list:
 
         print(f"{correct}/{total} ({perCorrect}%) images were correctly classified with {confidence}% confidence.")
         print(f"{incorrect}/{total} ({perIncorrect}%) images were incorrectly classified.")
-        return perCorrect, perIncorrect, confidence
+        print(f"Wrong classifications: {self.wrong_classification}")
+        return [correct, incorrect], confidence
     
     def mc_list(self, dir_path, num_images=0, threshold=0.01, width=100, height=100):
         self.matrix_classes = []
