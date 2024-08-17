@@ -1,6 +1,13 @@
 import imageutils as img
 import matrixclass as mc
 
+# TODO:
+# Make the html page more dynamic by removing all hardcoding of mnist (you were being lazy)
+# Allow users to submit their own directory of images or directory which contains directories of images
+# Prevent users from exceeding the number of images in the directory
+# Cleanup redundant code
+# Make the html page look better (subjective)
+
 # Matrices 1 and 7 selected
 def test1():
     matrix_classes = mc.MC_list('imgs/mnist', 200, ['0', '2', '3', '4', '5', '6', '8', '9'], 0.01, 28, 28)
