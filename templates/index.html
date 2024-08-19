@@ -48,7 +48,8 @@
             <a href="imgs/mnist/9">Nine</a>
         </li>
     </ul>
-    <input type="text" id="threshold-input" placeholder="Threshold=0.01">
+    <label for="threshold-slider">Threshold: <span id="threshold-value">0.01</span></label><br>
+    <input type="range" id="threshold-slider" min="0.01" max="1" step="0.01" value="0.01">
     <input type="text" id="width-input" placeholder="Width=100">
     <input type="text" id="height-input" placeholder="Height=100">
     <input type="text" id="num-images-input" placeholder="Enter number of images">

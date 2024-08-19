@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     const checkboxes = document.querySelectorAll('#directory-list input[type="checkbox"]');
     const numImagesInput = document.getElementById('num-images-input');
-    const thresholdInput = document.getElementById('threshold-input');
+    const thresholdSlider = document.getElementById('threshold-slider');
+    const thresholdValue = document.getElementById('threshold-value');
     const widthInput = document.getElementById('width-input');
     const heightInput = document.getElementById('height-input');
     const numImagesBtn = document.getElementById('num-images-btn');
@@ -12,21 +13,24 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const resultsDiv = document.getElementById('results');
     const imageDisplayDiv = document.getElementById('image-display');
 
+    thresholdSlider.addEventListener('input', () => {
+        thresholdValue.textContent = thresholdSlider.value;
+    });
+
     numImagesBtn.addEventListener('click', () => {
         imageDisplayDiv.innerHTML = '';
         resultsDiv.innerHTML = '';
 
-        if (isNaN(parseInt(numImagesInput.value)) ||
-            isNaN(parseInt(thresholdInput.value)) || 
+        if (isNaN(parseInt(numImagesInput.value)) || 
             isNaN(parseInt(widthInput.value)) || 
             isNaN(parseInt(heightInput.value))) {
-            resultsDiv.innerHTML = `Please enter valid values for the number of images, threshold, width, and height.`;
+            resultsDiv.innerHTML = `Please enter valid values for the number of images, width, and height.`;
         } else {
             numImages = parseInt(numImagesInput.value);
-            threshold = parseFloat(thresholdInput.value);
+            threshold = parseFloat(thresholdSlider.value);
             width = parseInt(widthInput.value);
             height = parseInt(heightInput.value);
-            thresholdInput.disabled = true;
+            thresholdSlider.disabled = true;
             widthInput.disabled = true;
             heightInput.disabled = true;
             numImagesClassBtn.disabled = false;
@@ -67,7 +71,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             body: JSON.stringify({ 
                 folders: uncheckedFolders, 
                 num_images: parseInt(numImagesInput.value), 
-                threshold: parseFloat(thresholdInput.value), 
+                threshold: parseFloat(thresholdSlider.value), 
                 width: parseInt(widthInput.value), 
                 height: parseInt(heightInput.value) 
             })
@@ -75,7 +79,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                console.log("Matrix classes created successfully:", data);
                 classifyImgsBtn.disabled = false;
                 displayImages(data.image_paths);
                 resultsDiv.innerHTML = `Images used for training:`;
@@ -101,8 +104,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                console.log("Classification successful:", data);
-                thresholdInput.disabled = false;
+                thresholdSlider.disabled = false;
                 widthInput.disabled = false;
                 heightInput.disabled = false;
                 numImagesBtn.disabled = false;
