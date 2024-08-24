@@ -1,63 +1,63 @@
-import argparse
-import importlib
-import sys
+import os
+import numpy as np
+from PIL import Image
 
-# Examples (Move this comment to a more suitable location):
-# Regular Example:
-# python genutils.py <module> <function> <args*>
-# python genutils.py imageutils.py load_image_and_resize imgs/dogs/Dog1.png 100 100
-# Pipe Example:
-# python genutils.py <module> <function> <args*> --pipe <module> <function>
-# python genutils.py imageutils.py load_images imgs/dogs --pipe classification.py find_image_cosine_similarities
+# Function to load MNIST images and labels
+def load_mnist_images(filename):
+    with open(filename, 'rb') as f:
+        f.read(4)  # Skip magic number
+        num_images = int.from_bytes(f.read(4), byteorder='big')
+        rows = int.from_bytes(f.read(4), byteorder='big')
+        cols = int.from_bytes(f.read(4), byteorder='big')
+        images = np.fromfile(f, dtype=np.uint8).reshape(num_images, rows, cols)
+    return images
 
-def parse_command_line_params():
-    parser = argparse.ArgumentParser(description='Execute a function from a given script with optional arguments.')
-    # Required
-    parser.add_argument('script', help='The script containing the function to execute.')
-    parser.add_argument('function_name', help='The name of the function to execute.')
-    parser.add_argument('func_args', nargs='*', help='The arguments to pass to the function.')
-    # Optional for piping
-    parser.add_argument('--pipe', nargs=2, help='Module and function to pipe the result to.', default=None)
-    args = parser.parse_args()
+def load_mnist_labels(filename):
+    with open(filename, 'rb') as f:
+        f.read(4)  # Skip magic number
+        num_labels = int.from_bytes(f.read(4), byteorder='big')
+        labels = np.fromfile(f, dtype=np.uint8)
+    return labels
 
-    # Splitting pipe into script and function if provided
-    pipe_script = None
-    pipe_function_name = None
-    if args.pipe:
-        pipe_script, pipe_function_name = args.pipe
+def load_mnist_data():
+    # Load MNIST data
+    train_images = load_mnist_images('MNIST_ORG/train-images.idx3-ubyte')
+    train_labels = load_mnist_labels('MNIST_ORG/train-labels.idx1-ubyte')
 
-    return args.script, args.function_name, args.func_args, pipe_script, pipe_function_name
+    # Create directories for each digit inside imgs/mnist
+    mnist_dir = 'imgs/mnist'
+    for digit in range(10):
+        os.makedirs(os.path.join(mnist_dir, str(digit)), exist_ok=True)
 
-def convert_args(func_args):
-    converted_args = []
-    for arg in func_args:
-        try:
-            converted_args.append(int(arg))
-        except ValueError:
-            converted_args.append(arg)
-    return converted_args
+    # Save images into corresponding directories
+    for i in range(len(train_images)):
+        image = Image.fromarray(train_images[i])
+        label = train_labels[i]
+        image_path = os.path.join(mnist_dir, str(label), f'image_{i}.jpg')
+        image.save(image_path)
 
-if __name__ == '__main__':
-    script, function_name, func_args, pipe_script, pipe_function_name = parse_command_line_params()
+def check_directory_structure(base_dir):
+    subdirectories = [dir for dir in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, dir))]
     
-    try:
-        module_name = script.replace('.py', '')
-        module = importlib.import_module(module_name)
-        function_to_call = getattr(module, function_name)
-        
-        converted_args = convert_args(func_args)
-        result = function_to_call(*converted_args)
+    if len(subdirectories) < 2:
+        return False
+    
+    valid_subdirs = 0
+    for subdir in subdirectories:
+        subdir_path = os.path.join(base_dir, subdir)
+        images = [file for file in os.listdir(subdir_path) if os.path.isfile(os.path.join(subdir_path, file))]
+        if len(images) >= 2:
+            valid_subdirs += 1
+    
+    return valid_subdirs >= 2
 
-        if pipe_function_name:
-            # Import the module for the piped function
-            pipe_module_name = pipe_script.replace('.py', '') if pipe_script else module_name
-            pipe_module = importlib.import_module(pipe_module_name)
-            pipe_function = getattr(pipe_module, pipe_function_name)
-            
-            # Execute the piped function
-            piped_result = pipe_function(result)
-            print(f"Piped function {pipe_function_name} executed with result:\n{piped_result}")
-        else:
-            print(f"Function {function_name} executed with result:\n{result}")
-    except Exception as e:
-        print(f"Failed to execute function {function_name} in {script}: {e}", file=sys.stderr)
+def count_images_in_directories(base_dir):
+    image_counts = {}
+    subdirectories = [dir for dir in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, dir))]
+    
+    for subdir in subdirectories:
+        subdir_path = os.path.join(base_dir, subdir)
+        images = [file for file in os.listdir(subdir_path) if os.path.isfile(os.path.join(subdir_path, file))]
+        image_counts[subdir] = len(images)
+    
+    return image_counts
