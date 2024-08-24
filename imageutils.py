@@ -35,7 +35,7 @@ def load_images(dir_path, width=100, height=100, num_images=0):
         except IOError:
             print(f"{file} is not a valid image.")
 
-    return images_dict, count
+    return images_dict
 
 # Write a function for combining the vectorized images into a matrix (2D NumPy array), where every vectorized image is a column
 def combine_images(images_dict):
@@ -48,7 +48,9 @@ def combine_images(images_dict):
 
 def load_and_vectorize(img_path, width=100, height=100):
     img = load_image_and_resize(img_path, width, height)
-    img_array = np.array(img) / 255.0
-    vectorized_img = vectorize_2D_array(img_array)
+    vectorized_img = vectorize_2D_array(img)
+    vector_length = np.linalg.norm(vectorized_img)
 
-    return vectorized_img
+    normalized_vectorized_img = vectorized_img / vector_length
+
+    return normalized_vectorized_img
