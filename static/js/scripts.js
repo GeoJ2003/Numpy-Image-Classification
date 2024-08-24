@@ -1,10 +1,11 @@
 document.addEventListener('DOMContentLoaded', (event) => {
-    const checkboxes = document.querySelectorAll('#directory-list input[type="checkbox"]');
+    const directoryList = document.getElementById('directory-list');
     const numImagesInput = document.getElementById('num-images-input');
     const thresholdSlider = document.getElementById('threshold-slider');
     const thresholdValue = document.getElementById('threshold-value');
     const widthInput = document.getElementById('width-input');
     const heightInput = document.getElementById('height-input');
+    const settingsBtn = document.getElementById('settings-btn');
     const numImagesBtn = document.getElementById('num-images-btn');
     const numImagesClassInput = document.getElementById('num-images-class-input');
     const numImagesClassBtn = document.getElementById('num-images-class-btn');
@@ -12,55 +13,192 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const classifyImgsBtn = document.getElementById('classify-imgs-btn');
     const resultsDiv = document.getElementById('results');
     const imageDisplayDiv = document.getElementById('image-display');
+    let dir_dict = {};
+    let subdirs_selected = {};
+
+    function listDirectories() {
+        fetch('/get_directories', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            dir_dict = data['dir_dict'];
+            console.log(Object.keys(dir_dict));
+            console.log(Object.values(dir_dict));
+
+            // Clear existing list
+            directoryList.innerHTML = '';
+
+            // Iterate for each key in the dictionary
+            Object.keys(dir_dict).forEach((key) => {
+                const header = document.createElement('h3');
+                const toggleButton = document.createElement('button');
+                toggleButton.textContent = key;
+                toggleButton.style.background = 'none';
+                toggleButton.style.border = 'none';
+                toggleButton.style.color = 'inherit';
+                toggleButton.style.font = 'inherit';
+                toggleButton.style.cursor = 'pointer';
+                toggleButton.title = 'Click to expand directory';
+
+                toggleButton.addEventListener('click', () => {
+                    const subdirectories = header.querySelectorAll('li');
+                    subdirectories.forEach(subdir => {
+                        subdir.style.display = subdir.style.display === 'none' ? 'block' : 'none';
+                    });
+                });
+
+                directoryList.appendChild(header);
+                header.appendChild(toggleButton);
+
+                Object.values(dir_dict[key]).forEach((value) => {
+                    const li = document.createElement('li');
+                    li.style.display = 'none';
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.name = value;
+                    checkbox.id = value;
+
+                    // Add event listener to the checkbox
+                    checkbox.addEventListener('change', (event) => {
+                        handleCheckboxChange(event);
+                    });
+
+                    const link = document.createElement('a');
+                    link.href = `imgs/${key}/${value}`;
+                    link.textContent = value;
+
+                    li.appendChild(checkbox);
+                    li.appendChild(link);
+                    header.appendChild(li);
+                });
+            });
+        });
+    }
+
+    function handleCheckboxChange(event) {
+        const checkbox = event.target;
+        const value = checkbox.id;
+        const keys = Object.keys(dir_dict);
+        keys.forEach((key) => {
+            if (dir_dict[key].includes(value)) {
+                if (Object.keys(subdirs_selected).length !== 0 && !Object.values(subdirs_selected).includes(key)) {
+                    resultsDiv.innerHTML = 'Please select sub directories from the same directory.';
+                    return;
+                }
+                if (checkbox.checked) {
+                    subdirs_selected[value] = key;
+                    console.log(subdirs_selected);
+                } else {
+                    delete subdirs_selected[value];
+                }
+            }
+        });
+    }
+
+    listDirectories();
 
     thresholdSlider.addEventListener('input', () => {
         thresholdValue.textContent = thresholdSlider.value;
     });
 
-    numImagesBtn.addEventListener('click', () => {
+    let leastNumImages = 2;
+
+    settingsBtn.addEventListener('click', () => {
         imageDisplayDiv.innerHTML = '';
         resultsDiv.innerHTML = '';
 
-        if (isNaN(parseInt(numImagesInput.value)) || 
-            isNaN(parseInt(widthInput.value)) || 
-            isNaN(parseInt(heightInput.value))) {
-            resultsDiv.innerHTML = `Please enter valid values for the number of images, width, and height.`;
+        if (Object.keys(subdirs_selected).length < 2) {
+            resultsDiv.innerHTML = 'Please select 2 or more sub directories to train.';
+            return;
+        }
+
+        if (isNaN(parseInt(widthInput.value)) || isNaN(parseInt(heightInput.value))) {
+            resultsDiv.innerHTML = `Please enter valid values for the width, and height.`;
         } else {
-            numImages = parseInt(numImagesInput.value);
-            threshold = parseFloat(thresholdSlider.value);
-            width = parseInt(widthInput.value);
-            height = parseInt(heightInput.value);
+            fetch('/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    dirs: subdirs_selected
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    leastNumImages = data.min_images;
+                } else {
+                    console.error("Failed to set directories:", data.message);
+                }
+            })
+            const threshold = parseFloat(thresholdSlider.value);
+            const width = parseInt(widthInput.value);
+            const height = parseInt(heightInput.value);
             thresholdSlider.disabled = true;
             widthInput.disabled = true;
             heightInput.disabled = true;
-            numImagesClassBtn.disabled = false;
-            numImagesClassInput.disabled = false;
+            settingsBtn.disabled = true;
+            numImagesBtn.disabled = false;
+            numImagesInput.disabled = false;
+            resultsDiv.innerHTML = 'Select a number of images for training.';
+        }
+    });
+
+    numImagesBtn.addEventListener('click', () => {
+        if (isNaN(parseInt(numImagesInput.value))) {
+            resultsDiv.innerHTML = `Please enter a valid value for the number of images to train.`;
+        }
+        else if (parseInt(numImagesInput.value) < 2) {
+            resultsDiv.innerHTML = `Please select a number of images greater than 1.`;
+        }
+        else if (parseInt(numImagesInput.value) > leastNumImages - 1) {
+            resultsDiv.innerHTML = `Please select a number of images less than or equal to ${leastNumImages - 1}.`;
+        }
+        else {
+            leastNumImages = leastNumImages - parseInt(numImagesInput.value);
             numImagesBtn.disabled = true;
             numImagesInput.disabled = true;
-            resultsDiv.innerHTML = '';
+            numImagesClassBtn.disabled = false;
+            numImagesClassInput.disabled = false;
+            resultsDiv.innerHTML = 'Select a number of images to classify.';
         }
     });
 
     numImagesClassBtn.addEventListener('click', () => {
-        numImagesClass = parseInt(numImagesClassInput.value);
-        if (!isNaN(numImagesClass) && numImagesClass > 0) {
-            TrainBtn.disabled = false;
+        const numImagesClass = parseInt(numImagesClassInput.value);
+        if (isNaN(numImagesClass)) {
+            resultsDiv.innerHTML = `Please enter a valid value for the number of images to classify.`;
+        } else if (numImagesClass < 2) {
+            resultsDiv.innerHTML = `Please select a number of images greater than 1.`;
+        } else if (numImagesClass > leastNumImages) {
+            resultsDiv.innerHTML = `Please select a number of images less than or equal to ${leastNumImages}.`;
+        }
+        else {
             numImagesClassBtn.disabled = true;
             numImagesClassInput.disabled = true;
-            resultsDiv.innerHTML = '';
-        } else {
-            resultsDiv.innerHTML = `Please enter a valid value for the number of images to classify.`;
+            TrainBtn.disabled = false;
+            resultsDiv.innerHTML = 'Click the train button to create subclasses for each directory chosen.';
         }
     });
 
     TrainBtn.addEventListener('click', () => {
         const uncheckedFolders = [];
         TrainBtn.disabled = true;
-        checkboxes.forEach(checkbox => {
-            if (!checkbox.checked) {
-                uncheckedFolders.push(checkbox.name);
+        key = Object.values(subdirs_selected)[0];
+        console.log(key);
+
+        dir_dict[key].forEach((value) => {
+            if (!Object.keys(subdirs_selected).includes(value)) {
+                uncheckedFolders.push(value);
             }
         });
+        console.log(uncheckedFolders);
         
         resultsDiv.innerHTML = `Training classes...`;
         fetch('/train', {
@@ -69,6 +207,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ 
+                dir: key,
                 folders: uncheckedFolders, 
                 num_images: parseInt(numImagesInput.value), 
                 threshold: parseFloat(thresholdSlider.value), 
@@ -107,15 +246,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 thresholdSlider.disabled = false;
                 widthInput.disabled = false;
                 heightInput.disabled = false;
-                numImagesBtn.disabled = false;
-                numImagesInput.disabled = false;
+                settingsBtn.disabled = false;
                 imageDisplayDiv.innerHTML = '';
-                let correct = data.predictions[0];
-                let incorrect = data.predictions[1];
-                let total = correct + incorrect;
+                const correct = data.predictions[0];
+                const incorrect = data.predictions[1];
+                const total = correct + incorrect;
                 // Round to the tenths place
-                let perCorrect = Math.round((data.predictions[0] / total) * 1000) / 10;
-                let perIncorrect = Math.round((data.predictions[1] / total) * 1000) / 10;
+                const perCorrect = Math.round((data.predictions[0] / total) * 1000) / 10;
+                const perIncorrect = Math.round((data.predictions[1] / total) * 1000) / 10;
                 resultsDiv.innerHTML = `
                     <p>${perCorrect}% (${correct}/${total}) of images were correctly classified with ${data.confidence}% confidence.</p>
                     <p>${perIncorrect}% (${incorrect}/${total}) of images were incorrectly classified.</p>

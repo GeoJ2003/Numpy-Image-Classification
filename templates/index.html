@@ -1,59 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Home</title>
-    <link rel="stylesheet" type="text/css" href="/static/css/styles.css">
+    <title>Image Classfication</title>
 </head>
 <body>
-    <h2>Available Directories in MNIST</h2>
-    <ul id="directory-list">
-        <li>
-            <input type="checkbox" id="0" name="0">
-            <a href="imgs/mnist/0">Zero</a>
-        </li>
-        <li>
-            <input type="checkbox" id="1" name="1">
-            <a href="imgs/mnist/1">One</a>
-        </li>
-        <li>
-            <input type="checkbox" id="2" name="2">
-            <a href="imgs/mnist/2">Two</a>
-        </li>
-        <li>
-            <input type="checkbox" id="3" name="3">
-            <a href="imgs/mnist/3">Three</a>
-        </li>
-        <li>
-            <input type="checkbox" id="4" name="4">
-            <a href="imgs/mnist/4">Four</a>
-        </li>
-        <li>
-            <input type="checkbox" id="5" name="5">
-            <a href="imgs/mnist/5">Five</a>
-        </li>
-        <li>
-            <input type="checkbox" id="6" name="6">
-            <a href="imgs/mnist/6">Six</a>
-        </li>
-        <li>
-            <input type="checkbox" id="7" name="7">
-            <a href="imgs/mnist/7">Seven</a>
-        </li>
-        <li>
-            <input type="checkbox" id="8" name="8">
-            <a href="imgs/mnist/8">Eight</a>
-        </li>
-        <li>
-            <input type="checkbox" id="9" name="9">
-            <a href="imgs/mnist/9">Nine</a>
-        </li>
-    </ul>
+    <h2>Available Directories</h2>
+    <ul id="directory-list"></ul>
     <label for="threshold-slider">Threshold: <span id="threshold-value">0.01</span></label><br>
-    <input type="range" id="threshold-slider" min="0.01" max="1" step="0.01" value="0.01">
+    <input type="range" id="threshold-slider" min="0.01" max="1" step="0.01" value="0.01", title="Higher threshold = more distinct subspaces">
     <input type="text" id="width-input" placeholder="Width=100">
     <input type="text" id="height-input" placeholder="Height=100">
-    <input type="text" id="num-images-input" placeholder="Enter number of images">
-    <button id="num-images-btn"># of images from each directory</button>
+    <button id="settings-btn">Settings</button>
+    <input type="text" id="num-images-input" placeholder="Enter number of images" disabled>
+    <button id="num-images-btn" disabled># of images from each directory</button>
     <input type="text" id="num-images-class-input" placeholder="Enter number of images" disabled>
     <button id="num-images-class-btn" disabled># of images to classify</button>
     <button id="train-btn" disabled>Train</button>
